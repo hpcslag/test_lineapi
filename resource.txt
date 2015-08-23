@@ -1,0 +1,58 @@
+http://carpedm20.github.io/line/tutorial.html#part-3-rooms-and-groups
+
+
+記得切 2.7版
+
+原帖: https://www.ptt.cc/bbs/MIS/M.1414213987.A.7EF.html
+前陣子小弟有簡介過如何將Cacti告警訊息如何透過簡訊發送,
+延續這個主題,今天來簡介如何透過LINE來發送告警訊息.
+
+其實LINE並沒有提供API接口,拜國外的一位大神所賜
+他用了python寫了LINE的api?模擬器？
+
+第一步：你得先有LINE的帳號,如果是公司要用的帳號可以透過BlueStacks
+        App player,安裝LINE後可以使用Facebook的帳號申請LINE帳號,
+        這個部分我就不多說明了,網路上應該很多教學.
+
+第二步：下載大神的程式
+        https://github.com/carpedm20/LINE
+        使用手冊
+        http://carpedm20.github.io/line/
+        但是最新版的程式被LINE公司要求移除一些code所以無法使用賬號密碼登入
+        只能用authtoken登入,所以我們改用舊版一點的程式
+        https://pypi.python.org/pypi/line/0.0.8
+
+第三步：把程式下載後解壓縮,安裝方式非常簡單 python setup.py install
+
+
+第四步：安裝完畢後,line的資料夾中會有__init__.py cli.py client.py models.py
+        這幾個文件,接下來我們要來取得authtoken的值,在終端機視窗輸入
+        #python
+        >>>from line import LineClient, LineGroup, LineContact
+        >>>client = LineClient("xxxx@gmail.com", "xxxxxx")
+        Enter PinCode '9023' to your mobile phone in 2 minutes
+        >>> print client.authToken
+        DLfeGYOfOR2EEMZSa4nd.qM0Hnke6HQm1dJ3gTMXiFq.j2PE6TLIx2HlBp4Sg1x
+        這時候authtoken值就出來了
+
+第五步：＃vi cacti.py 我們建立一個可以發訊息的script,authToken就填入剛剛
+        取得的值,使用client.groups[].sendMessage()另外我這邊使用sys.argv
+        傳值,就可以發訊息到你指定的群組還有更多方式可以使用,請參見使用手冊
+from line import sys, LineClient, LineGroup, LineContact
+
+try:
+    client = LineClient(authToken="DLGXrEOTSTUTFjKUQER1.ENllx8g5EM=")
+except:
+    print "Login Failed"
+
+while True:
+    client.groups[0].sendMessage(sys.argv[1])
+    break
+
+第六步：再來修改thold_functions.php這隻程式，找到function thold_mail
+        移動到function 的最尾端可以看到return ''; ，在return '';前加入
+$sms = shell_exec('python /usr/share/cacti/plugins/thold/line/line/
+cacti.py '.escapeshellarg($message).'');
+
+完成圖
+http://ppt.cc/bgso
